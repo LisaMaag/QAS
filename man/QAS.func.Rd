@@ -52,7 +52,9 @@ result <- QAS.func(y~x+z, data=example_data,weight=NULL,seed=NULL)
 
 }
 \references{
-Stoltenberg, B. (2016), Using logit on big data – from iterative methods to analytical solutions, GfK Verein Working Paper Series, No. 3 / 2016 \cr Lipovetsky, S. (2014), Analytical closed-form solution for binary logit regression by categorical predictors, Journal of Applied Statistics, No. 42 / 2015, DOI:10.1080/02664763.2014.932760
+Lipovetsky, S. (2014), Analytical closed-form solution for binary logit regression by categorical predictors, \emph{Journal of Applied Statistics}, No. 42 / 2015 \cr
+Lipovetsky, S. & Conklin, M. (2014), Best-Worst Scaling in analytical closed-form solution, \emph{The Journal of Choice Modelling}, No. 10 / 2014 \cr
+Stoltenberg, B. (2016), Using logit on big data – from iterative methods to analytical solutions, \emph{GfK Verein Working Paper Series}, No. 3 / 2016 \cr
 }
 \author{
 This method is based on the research work of Stan Lipovetsky and Birgit Stoltenberg.

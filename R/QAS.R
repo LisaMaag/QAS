@@ -8,7 +8,7 @@
 #'@param weight an optional vector of ‘prior weights’ to be used in the fitting process. Should be NULL or a numeric vector. In case of NULL, each case is weighted with 1.
 #'@param seed saving the state of a random process. Should be NULL or a numeric vector. In case of NULL a seed is generated at random.
 #'
-#'@details A typical predictor has the form dependent_Variable \strong{'~'} independent_Variables.\cr The dependent_Variable has \strong{two} categories.\cr If there is more than one independent_Variable, they can be combined with a '+'.
+#'@details A typical predictor has the form dependent_Variable '~' independent_Variables.\cr The dependent_Variable has \strong{two} categories.\cr If there is more than one independent_Variable, they can be combined with a '+'.
 #'@details The data frame can \strong{not} contain any missing values.\cr \strong{Metric} variables have to be of type \strong{numeric}. All \strong{other variables} have to be of type \strong{integer}.\cr The first variable in the dataset hat to be the dependent variable.\cr The scale of large numbers has to be reduced e.g. standardization.
 #'
 #'
@@ -30,8 +30,9 @@
 #'@author This method is based on the research work of Stan Lipovetsky and Birgit Stoltenberg.
 #'
 #'@references
-#' Stoltenberg, B. (2016), Using logit on big data – from iterative methods to analytical solutions, GfK Verein Working Paper Series, No. 3 / 2016 \cr
-#' Lipovetsky, S. (2014), Analytical closed-form solution for binary logit regression by categorical predictors, Journal of Applied Statistics, No. 42 / 2015, DOI:10.1080/02664763.2014.932760
+#'Lipovetsky, S. (2014), Analytical closed-form solution for binary logit regression by categorical predictors, \emph{Journal of Applied Statistics}, No. 42 / 2015 \cr
+#'Lipovetsky, S. & Conklin, M. (2014), Best-Worst Scaling in analytical closed-form solution, \emph{The Journal of Choice Modelling}, No. 10 / 2014 \cr
+#'Stoltenberg, B. (2016), Using logit on big data – from iterative methods to analytical solutions, \emph{GfK Verein Working Paper Series}, No. 3 / 2016 \cr
 #'
 #'@examples
 #' # generate Data

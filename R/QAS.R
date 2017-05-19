@@ -60,38 +60,49 @@ QAS.func <- function(frml, data = NULL, weight = NULL, seed = NULL) {
   # ----------------------------------------------------------- Datenaufbereitung
 
   model_data <- model.frame(frml, data = data)
-  row.names(model_data) <- 1:nrow(data)
+  row.names(model_data) <- 1:nrow(data)            # Nummerierung der Fälle
 
-  if(is.integer(model_data[1])==FALSE) {
+  if(is.integer(model_data[,1])==FALSE) {
 
-    model_data[1] <- as.integer(model_data[,1])
+    stop("first variable is no integer")
+  }
+
+  z <- rle(sort(model_data[,1]))
+  if(length(z[["values"]])>2) {
+
+    stop("dependent variable has more than two categories")
+  }
+
+  fact <- vapply(model_data,is.factor,c(is.factor=FALSE))
+
+  if (sum(fact)>0) {
+
+    print(names(Filter(is.factor, model_data)))
+    stop("Factores in the dataset")
 
   }
 
-  Y <- model_data[1]
-  X <- model_data[-1]
+  char <- vapply(model_data,is.character,c(is.character=FALSE))
 
-  #---------------------------------- wenn keine Gewichtung gegeben, jeden Fall mit 1 gewichten
+  if (sum(char)>0) {
 
-  if (is.null(weight)) {
+    print(names(Filter(is.character, model_data)))
+    stop("Characters in the dataset")
 
-    weight <- rep(1,nrow(model_data))
   }
+
+  nr <- nrow(model_data)
+  nc <- ncol(model_data)
 
   # --------------------------------  which Xvars have no variance
 
-  if (sum(unlist(lapply(model_data, function(col) length(unique(col)))) == 1) == 1) {
+  want <- apply(model_data,2,function(x){diff(range(x))}) >0
+  swant <- sum(want)
+  if(swant < nc){
 
-    warning("remove variables with no variance.")
-    out <- lapply(X, function(x) length(unique(x)))
-    want <- which(!out > 1)
-    X[,unlist(want)] <- NULL
-    rm(out,want)
+    model_data <- model_data[,want]
+    warning(paste(nc-swant,"variable(s) with no variance removed."))
 
-    out <- lapply(model_data, function(x) length(unique(x)))
-    want <- which(!out > 1)
-    model_data[,unlist(want)] <- NULL
-    rm(out,want)
   }
 
   # -------------------------------- Kategorisierung metrischer Variablen
@@ -107,27 +118,32 @@ QAS.func <- function(frml, data = NULL, weight = NULL, seed = NULL) {
 
   numindex <- which(sapply(model_data, class) == "numeric")
   numdat <- as.data.frame(model_data[,numindex])
+  colnames(numdat) <- names(numindex)
   catdat <- apply(numdat,2,categorize)
   catdatdat <- do.call(cbind,lapply(catdat,function(x)x[[1]]))
   model_data[,numindex] <- catdatdat
-  means <- do.call(cbind,lapply(catdat,function(x)x[[2]]))[-1,]
+  means <- do.call(cbind,lapply(catdat,function(x)x[[2]]))[-1,,drop=FALSE]
 
   # -------------------------------- Cell definition
 
+  Y <- model_data[1]
+  X <- model_data[-1]
+
   # let's make 'Cell' in column going immediately after the data:
-  model_data[,'Cell'] <- rep(0, nrow(model_data))
+  model_data[,'Cell'] <- rep(0, nr)
 
   # -------------------------------- Zeilen für contingency_function vorbereiten
 
   keeps <- names(X)
   model_data[,'Cell'] <- apply(as.matrix(model_data[keeps]), 1, function(x) paste(x, collapse = ' '))
-  length(unique(model_data$Cell))
   rm(keeps)
 
+  Cell <- model_data[,'Cell']
   # ------------------------------- construct contingency y variable
 
-  model_data <- contingency_function(data = model_data, model = Y)
+  LogOdds.PriorProb <- contingency_function(Y = Y, Cell = Cell)
 
+  model_data <- cbind(LogOdds.PriorProb,model_data)
   keeps <- c('LogOdds.PriorProb',names(X))
   modelling.all <- model_data[keeps]
   rm(keeps)
@@ -135,11 +151,18 @@ QAS.func <- function(frml, data = NULL, weight = NULL, seed = NULL) {
   # ------------------------------ Linear Regression
 
   #  ONE Steps to calculate:
-
   #  I.   calculate OLS.beta:
   #       OLS.beta = (X'X)^(-1)X'y
 
-  results <- lm(formula = LogOdds.PriorProb ~. , data = modelling.all, na.action = na.exclude, weights = weight)
+  if(is.null(weight)) {
+
+    results <- lm(formula = LogOdds.PriorProb ~. , data = modelling.all, na.action = na.exclude)
+
+  } else {
+
+    results <- lm(formula = LogOdds.PriorProb ~. , data = modelling.all, na.action = na.exclude, weights = weight)
+
+  }
 
   # ----------------------------- Y_hat berechnen
 
@@ -148,18 +171,15 @@ QAS.func <- function(frml, data = NULL, weight = NULL, seed = NULL) {
 
   #ist eingl kein X' !! sondern nur X
   X_strich <- (as.matrix(X))
-  dim(X_strich)
 
   param <- t(as.matrix(results$coefficients))
   V <- tcrossprod(X_strich,param)
   eV <- exp(V)
 
-  results$y_hat <- (eV/(1+eV))
+  results$fitted.values <- (eV/(1+eV))
   results$means_for_cat <- means
-
   results$seed <- seed
 
-  results$fitted.values <- NULL
   results$residuals <- NULL
   results$assign <- NULL
   results$effects <- NULL
@@ -170,30 +190,24 @@ QAS.func <- function(frml, data = NULL, weight = NULL, seed = NULL) {
 
   # ---------------------------- AIC/BIC berechnen
 
-  s <- (1/(nrow(data)-ncol(X)))*(sum((results$y_hat - Y)^2))
+  logL <- sum(Y*log(results$fitted.values)) + sum((1-Y)*log(1-results$fitted.values))
 
-  results$AIC <- nrow(data)*log(s) + (2*ncol(X))
+  results$AIC <- 2*nr - 2*logL
 
-  results$BIC <- nrow(data)*log(s) + (ncol(X)*log(nrow(data)))
+  results$BIC <- log(nc)*nr - 2*logL
 
   return (results)
 
 }
 
  #---------------------------- Wird nur intern verwendet, daher kein export
-contingency_function <- function(data, model) {
+contingency_function <- function(Y, Cell) {
 
-  # --- --- ---
-  Counts.of.Bought <- tapply(data[,1], data[,'Cell'], sum)
-  Counts.of.Shown <- table(data[,'Cell'])
+  Counts.of.Bought <- tapply(Y[,1], Cell, mean)
 
-  CountBought <- as.numeric(Counts.of.Bought[match(data[,'Cell'], names(Counts.of.Bought))])
-  CountsShown <- as.vector(Counts.of.Shown[match(data[,'Cell'], names(Counts.of.Shown))])
-  PriorProb <- CountBought/CountsShown
+  PriorProb <- as.numeric(Counts.of.Bought[match(Cell, names(Counts.of.Bought))])
 
-  print(table(CountBought == 0))
-  rm(Counts.of.Bought, Counts.of.Shown)
-  rm(CountBought, CountsShown)
+  rm(Counts.of.Bought)
 
   # --- --- ---
   # change prob = 0 to eps, prob = 1 to (1 - eps):
@@ -206,9 +220,9 @@ contingency_function <- function(data, model) {
 
   rm(min.Prob, max.Prob, min.min.Prob, eps)
 
-  data$LogOdds.PriorProb <- log(PriorProb/(1 - PriorProb))
+  LogOdds.PriorProb <- log(PriorProb/(1 - PriorProb))
 
-  return(data)
+  return(LogOdds.PriorProb)
 }
 
 # -----------------------------------------------------
@@ -247,9 +261,6 @@ contingency_function <- function(data, model) {
 #' @export
 predictQAS <- function(QAS.res, data) {
 
-  #QAS.res <- Result1
-  #data <- data
-
   means_for_cut <- is.null(QAS.res$means_for_cat)
 
   if (means_for_cut == FALSE) {
@@ -261,27 +272,15 @@ predictQAS <- function(QAS.res, data) {
     catdata <- matrix(NA, nrow = nrow(numdata), ncol = ncol(numdata))
     colnames(catdata) <- numvar
 
-    if(length(numvar) == 1){
+
       for(j in numvar){
 
-        QAS.res$means_for_cat <- sort(QAS.res$means_for_cat, decreasing = FALSE)
-        catdata[,j] <- findInterval(numdata[,j],QAS.res$means_for_cat)       #Kategorisierung der Variablen
-
-      }
-    }
-
-    if(length(numvar) > 1){
-      for(j in numvar){
+        QAS.res$means_for_cat[,j] <- sort(QAS.res$means_for_cat[,j], decreasing = FALSE)
+       # QAS.res$means_for_cat <- sort(QAS.res$means_for_cat, decreasing = FALSE)
 
         catdata[,j] <- findInterval(numdata[,j],QAS.res$means_for_cat[,j])
+       # catdata <- findInterval(numdata,QAS.res$means_for_cat)
 
-      }
-
-    }
-
-
-    if(length(numvar) > 1){                                             # wenn mehr als eine Variable
-      catdata <- do.call(cbind,lapply(catdata,function(x)x[[1]]))
     }
 
     data[,numvar] <- catdata                                            # Datenzusammenfügen
@@ -296,11 +295,13 @@ predictQAS <- function(QAS.res, data) {
 
   #ist eingl kein X' !! sondern nur X
   X_strich <- (as.matrix(Xnew))
-  param_QAS <- (as.matrix(QAS.res$coefficients))
-  V <- (X_strich%*%param_QAS)
+  param_QAS <- t(as.matrix(QAS.res$coefficients))
+  V <- tcrossprod(X_strich,param_QAS)
   eV <- exp(V)
 
   yhat_orig <- as.vector((eV/(1+eV)))
+  transformed_data <- data
+  row.names(transformed_data) <- 1:nrow(transformed_data)            # Nummerierung der Fälle
 
-  return(list(yhat_orig=yhat_orig,data=data))
+  return(list(yhat_orig=yhat_orig,transformed_data=transformed_data))
 }

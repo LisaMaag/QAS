@@ -227,7 +227,7 @@ contingency_function <- function(Y, Cell) {
 
 # -----------------------------------------------------
 # K A T E G O R I S I E R U N G S - F U N K T I O N
-#' @title Function for categorization after QAS.func
+#'@title Function for categorization after QAS.func
 #'
 #'@description \code{predictQAS} is used to categorize  numeric variables in a dataset the same way as the QAS.func-Function for calculating the coefficients.
 #'
@@ -241,8 +241,6 @@ contingency_function <- function(Y, Cell) {
 #'  \item{\code{yhat_orig}}{the predicted values of the dependent variable based on the coefficients of QAS.func and the dataset used for categorization}
 #'  \item{\code{data}}{the dataset with categorized numeric variables}
 #'  }
-#'
-#'
 #'
 #'@examples
 #' # generate Data
@@ -258,7 +256,7 @@ contingency_function <- function(Y, Cell) {
 #' result2  <- predictQAS(QAS.res = result1, data=example_data)
 #'
 #'
-#' @export
+#'@export
 predictQAS <- function(QAS.res, data) {
 
   means_for_cut <- is.null(QAS.res$means_for_cat)
@@ -266,7 +264,7 @@ predictQAS <- function(QAS.res, data) {
   if (means_for_cut == FALSE) {
 
     numvar <- names(which(sapply(data, class) == "numeric"))                 # alle numerics in data
-    numvar <- numvar[numvar %in% c(attributes(QAS.res$terms)$term.labels)]   # alle die auch als UV werwendet wurden
+    numvar <- numvar[numvar %in% c(attributes(QAS.res$terms)$term.labels)]   # alle die auch als UV verwendet wurden
     numdata <- as.data.frame(data[,numvar])
     colnames(numdata) <- numvar
     catdata <- matrix(NA, nrow = nrow(numdata), ncol = ncol(numdata))
@@ -304,4 +302,51 @@ predictQAS <- function(QAS.res, data) {
   row.names(transformed_data) <- 1:nrow(transformed_data)            # Nummerierung der Fälle
 
   return(list(yhat_orig=yhat_orig,transformed_data=transformed_data))
+}
+
+# -----------------------------------------------------
+# QAS for MICE - F U N K T I O N
+
+#'@title Function to use QAS in Mice
+#'
+#'@description \code{mice.impute.QAS} is used to prepare the \code{predictQAS} output for mice
+#'
+#'@param y The target variable
+#'@param ry a logical vector, which indicates the missing values in the target variable
+#'@param x a data frame with the independent variables
+#'
+#'@return An object of class \emph{mice.impute.QAS} is a vector containing the imputed values of the target variable.
+#'
+#'@examples
+#' # generate Data
+#' y <- as.integer(c(1,0,0,0,1,1,1,0,0,1))
+#' x <- c(15,88,90,60,24,30,26,57,69,18)
+#' z <- as.integer(c(3,2,2,1,3,3,2,1,1,3))
+#' example_data <- data.frame(y,x,z)
+#'
+#' # deploy QAS.func-Function
+#' result1 <- QAS.func(y~x+z, data=example_data,weight=NULL,seed=NULL)
+#'
+#' # deploy predictQas-Function
+#' result2  <- predictQAS(QAS.res = result1, data=example_data)
+#'
+#' # generate logical vector and data frame with independent variables
+#' ry <- c(TRUE,TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,TRUE,TRUE)
+#' x <- data.frame(x,z)
+#'
+#' # deploy mice.impute.QAS-Funktion
+#' impute <- mice.impute.QAS(y=y,ry=ry,x=example_data)
+#'
+#'@importFrom stats formula rbinom
+#'
+#'@export
+mice.impute.QAS <- function (y, ry, x) {
+  data <- data.frame(y,x)
+  colnames(data) <- paste0("v",c(1:(ncol(x)+1)))
+  data.obs <- data[ry,]
+  frml <- formula(paste("v1~",paste(paste0("v",c(2:(ncol(x)+1))),collapse="+")))
+  QAS.res <- QAS.func(frml = frml,data = data.obs)
+  yhat.mis <- predictQAS(QAS.res, data[!ry,])
+  yimp <- sapply(yhat.mis$yhat_orig,rbinom,size=1,n=1)    #vorher: n=sum(!ry)
+  return(yimp)
 }

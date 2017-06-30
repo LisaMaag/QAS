@@ -1,6 +1,6 @@
 Package: QAS
 Title: Quasi-analytical solution for logit
-Version: 0.1.0
+Version: 0.1.1
 Author: Lisa Maag
 Maintainer: Lisa Maag <lisa.maag@gfk.com>
 Description: The package provides a quasi-analytical solution for logit models. 

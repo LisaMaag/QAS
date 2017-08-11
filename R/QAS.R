@@ -5,7 +5,7 @@
 #'
 #'@param frml an object of class \code{\link[stats]{formula}} (or one that can be coerced to that class): a symbolic description of the model to be fitted. The details of model specification are given under ‘Details’.
 #'@param data a data frame containing the variables in the model (or object coercible by \code{\link[base]{as.data.frame}} to a data frame).  Details of the structure of the data are given under 'Details'.
-#'@param weight an optional vector of ‘prior weights’ to be used in the fitting process. Should be NULL or a numeric vector. In case of NULL, each case is weighted with 1.
+#'@param weights an optional vector of ‘prior weights’ to be used in the fitting process. Should be NULL or a numeric vector. In case of NULL, each case is weighted with 1.
 #'@param seed saving the state of a random process. Should be NULL or a numeric vector. In case of NULL a seed is generated at random.
 #'
 #'@details A typical predictor has the form dependent_Variable '~' independent_Variables.\cr The dependent_Variable has \strong{two} categories.\cr If there is more than one independent_Variable, they can be combined with a '+'.
@@ -47,15 +47,17 @@
 #'
 #'@importFrom stats runif lm model.frame na.exclude
 #'
+#'
+#'
 #'@export
-QAS.func <- function(frml, data = NULL, weight = NULL, seed = NULL) {
+QAS.func <- function(frml, data = data, weights = NULL, seed = NULL) {
 
-   if (is.null(seed)) {
-     seed <- floor(runif(1, 0, 1e6))
-   }
-   if (!is.null(seed)) {
+  if (is.null(seed)) {
+    seed <- floor(runif(1, 0, 1e6))
+  }
+  if (!is.null(seed)) {
     set.seed(seed)
-   }
+  }
 
   # ----------------------------------------------------------- Datenaufbereitung
 
@@ -68,9 +70,9 @@ QAS.func <- function(frml, data = NULL, weight = NULL, seed = NULL) {
   }
 
   z <- rle(sort(model_data[,1]))
-  if(length(z[["values"]])>2) {
+  if(length(z[["values"]])!=2) {
 
-    stop("dependent variable has more than two categories")
+    stop("dependent variable does not have two categories")
   }
 
   fact <- vapply(model_data,is.factor,c(is.factor=FALSE))
@@ -78,7 +80,7 @@ QAS.func <- function(frml, data = NULL, weight = NULL, seed = NULL) {
   if (sum(fact)>0) {
 
     print(names(Filter(is.factor, model_data)))
-    stop("Factores in the dataset")
+    stop("Factors in the dataset")
 
   }
 
@@ -110,7 +112,7 @@ QAS.func <- function(frml, data = NULL, weight = NULL, seed = NULL) {
   categorize <- function(y){
     my <- mean(y)
     my2 <- tapply(y,y > my,mean)
-    rulez <- c(-.Machine$double.xmax,my2[1],my,my2[2])
+    rulez <- c(-.Machine$double.xmax,my2[1],my,my2[2])	# MW UND MW DER H?LFTEN
     rulez <- sort(rulez, decreasing = FALSE)
     caty <- findInterval(y,rulez)
     return(list(caty,rulez))
@@ -120,9 +122,9 @@ QAS.func <- function(frml, data = NULL, weight = NULL, seed = NULL) {
   numdat <- as.data.frame(model_data[,numindex])
   colnames(numdat) <- names(numindex)
   catdat <- apply(numdat,2,categorize)
-  catdatdat <- do.call(cbind,lapply(catdat,function(x)x[[1]]))
+  catdatdat <- do.call(cbind,lapply(catdat,function(x)x[[1]]))	# IN SPALTENFORM BRINGEN
   model_data[,numindex] <- catdatdat
-  means <- do.call(cbind,lapply(catdat,function(x)x[[2]]))[-1,,drop=FALSE]
+  means <- do.call(cbind,lapply(catdat,function(x)x[[2]]))[-1,,drop=FALSE]	# MITTELWERTE
 
   # -------------------------------- Cell definition
 
@@ -154,15 +156,21 @@ QAS.func <- function(frml, data = NULL, weight = NULL, seed = NULL) {
   #  I.   calculate OLS.beta:
   #       OLS.beta = (X'X)^(-1)X'y
 
-  if(is.null(weight)) {
+
+  if(is.null(weights)) {
 
     results <- lm(formula = LogOdds.PriorProb ~. , data = modelling.all, na.action = na.exclude)
 
   } else {
 
-    results <- lm(formula = LogOdds.PriorProb ~. , data = modelling.all, na.action = na.exclude, weights = weight)
+    results <- lm(formula = LogOdds.PriorProb ~. , data = modelling.all, na.action = na.exclude, weights = weights)
 
   }
+
+  # NA-Parameter durch "0" ersetzen
+
+  nacoef <- which(is.na(results$coefficients))
+  results$coefficients[nacoef] <- 0
 
   # ----------------------------- Y_hat berechnen
 
@@ -200,7 +208,7 @@ QAS.func <- function(frml, data = NULL, weight = NULL, seed = NULL) {
 
 }
 
- #---------------------------- Wird nur intern verwendet, daher kein export
+#---------------------------- Wird nur intern verwendet, daher kein export
 contingency_function <- function(Y, Cell) {
 
   Counts.of.Bought <- tapply(Y[,1], Cell, mean)
@@ -271,13 +279,13 @@ predictQAS <- function(QAS.res, data) {
     colnames(catdata) <- numvar
 
 
-      for(j in numvar){
+    for(j in numvar){
 
-        QAS.res$means_for_cat[,j] <- sort(QAS.res$means_for_cat[,j], decreasing = FALSE)
-       # QAS.res$means_for_cat <- sort(QAS.res$means_for_cat, decreasing = FALSE)
+      QAS.res$means_for_cat[,j] <- sort(QAS.res$means_for_cat[,j], decreasing = FALSE)
+      # QAS.res$means_for_cat <- sort(QAS.res$means_for_cat, decreasing = FALSE)
 
-        catdata[,j] <- findInterval(numdata[,j],QAS.res$means_for_cat[,j])
-       # catdata <- findInterval(numdata,QAS.res$means_for_cat)
+      catdata[,j] <- findInterval(numdata[,j],QAS.res$means_for_cat[,j])
+      # catdata <- findInterval(numdata,QAS.res$means_for_cat)
 
     }
 
@@ -314,6 +322,9 @@ predictQAS <- function(QAS.res, data) {
 #'@param y The target variable
 #'@param ry a logical vector, which indicates the missing values in the target variable
 #'@param x a data frame with the independent variables
+#'@param boot if TRUE, a bootstrap sample ?
+#'@param ... further objects from other functions
+#'
 #'
 #'@return An object of class \emph{mice.impute.QAS} is a vector containing the imputed values of the target variable.
 #'
@@ -331,22 +342,68 @@ predictQAS <- function(QAS.res, data) {
 #' result2  <- predictQAS(QAS.res = result1, data=example_data)
 #'
 #' # generate logical vector and data frame with independent variables
-#' ry <- c(TRUE,TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,TRUE,TRUE)
+#' ry <- c(TRUE,TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,TRUE,TRUE,TRUE)
 #' x <- data.frame(x,z)
 #'
 #' # deploy mice.impute.QAS-Funktion
-#' impute <- mice.impute.QAS(y=y,ry=ry,x=example_data)
+#' impute <- mice.impute.QAS(y=y,ry=ry,x=example_data,boot=TRUE)
+#'
+#' # run mice function
+#' library(mice)
+#' final <- mice(nhanes2,method=c("","pmm","QAS","pmm"))
 #'
 #'@importFrom stats formula rbinom
 #'
 #'@export
-mice.impute.QAS <- function (y, ry, x) {
-  data <- data.frame(y,x)
+
+mice.impute.QAS <- function (y, ry, x,boot=TRUE, ...) {
+
+  ty <- names(table(y))
+  if(length(ty)==2) {
+    y.QAS <- as.integer(y==ty[2])
+  } else if(length(ty)==1){
+    y.QAS <- as.integer(y==ty[1])
+  } else {
+    stop("target variable has more than two categories")
+  }
+
+  data <- data.frame(y.QAS,x)
   colnames(data) <- paste0("v",c(1:(ncol(x)+1)))
-  data.obs <- data[ry,]
+
+  nobs <- sum(ry)
+  nmis <- sum(!ry)
+
+  data.obs <- data[ry, ]
+  y.obs <- data.obs[,1]
+
   frml <- formula(paste("v1~",paste(paste0("v",c(2:(ncol(x)+1))),collapse="+")))
-  QAS.res <- QAS.func(frml = frml,data = data.obs)
-  yhat.mis <- predictQAS(QAS.res, data[!ry,])
-  yimp <- sapply(yhat.mis$yhat_orig,rbinom,size=1,n=1)    #vorher: n=sum(!ry)
+
+
+  if (diff(range(y.obs)) == 0){
+
+    yimp <- rep(y.obs[1],nmis)
+  } else {
+    if(boot){
+      random <- runif(nobs - 1)
+      sorted <- c(0, sort(random), 1)
+      weight <- diff(sorted) * nobs
+      rm(random, sorted)
+
+      QAS.res <- QAS.func(frml = frml,data = data.obs, weights = weight)
+    } else {
+      QAS.res <- QAS.func(frml = frml,data = data.obs)
+    }
+
+    yhat.mis <- predictQAS(QAS.res, data[!ry,])
+
+    yimp <- sapply(yhat.mis$yhat_orig,rbinom,size=1,n=1)    #vorher: n=sum(!ry)
+
+  }
+
+  yimp[yimp==1] <- ty[2]
+  yimp[yimp==0] <- ty[1]
+
+  class(yimp) <- class(y)
+
   return(yimp)
 }

@@ -47,8 +47,6 @@
 #'
 #'@importFrom stats runif lm model.frame na.exclude
 #'
-#'
-#'
 #'@export
 QAS.func <- function(frml, data = data, weights = NULL, seed = NULL) {
 
@@ -62,7 +60,6 @@ QAS.func <- function(frml, data = data, weights = NULL, seed = NULL) {
   # ----------------------------------------------------------- Datenaufbereitung
 
   model_data <- model.frame(frml, data = data)
-  row.names(model_data) <- 1:nrow(data)            # Nummerierung der Fälle
 
   if(is.integer(model_data[,1])==FALSE) {
 
@@ -112,7 +109,7 @@ QAS.func <- function(frml, data = data, weights = NULL, seed = NULL) {
   categorize <- function(y){
     my <- mean(y)
     my2 <- tapply(y,y > my,mean)
-    rulez <- c(-.Machine$double.xmax,my2[1],my,my2[2])	# MW UND MW DER H?LFTEN
+    rulez <- c(-.Machine$double.xmax,my2[1],my,my2[2])
     rulez <- sort(rulez, decreasing = FALSE)
     caty <- findInterval(y,rulez)
     return(list(caty,rulez))
@@ -122,9 +119,9 @@ QAS.func <- function(frml, data = data, weights = NULL, seed = NULL) {
   numdat <- as.data.frame(model_data[,numindex])
   colnames(numdat) <- names(numindex)
   catdat <- apply(numdat,2,categorize)
-  catdatdat <- do.call(cbind,lapply(catdat,function(x)x[[1]]))	# IN SPALTENFORM BRINGEN
+  catdatdat <- do.call(cbind,lapply(catdat,function(x)x[[1]]))
   model_data[,numindex] <- catdatdat
-  means <- do.call(cbind,lapply(catdat,function(x)x[[2]]))[-1,,drop=FALSE]	# MITTELWERTE
+  means <- do.call(cbind,lapply(catdat,function(x)x[[2]]))[-1,,drop=FALSE]
 
   # -------------------------------- Cell definition
 
@@ -396,7 +393,7 @@ mice.impute.QAS <- function (y, ry, x,boot=TRUE, ...) {
 
     yhat.mis <- predictQAS(QAS.res, data[!ry,])
 
-    yimp <- sapply(yhat.mis$yhat_orig,rbinom,size=1,n=1)    #vorher: n=sum(!ry)
+    yimp <- sapply(yhat.mis$yhat_orig,rbinom,size=1,n=1)
 
   }
 

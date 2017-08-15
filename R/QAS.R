@@ -3,13 +3,13 @@
 #'@description \code{QAS.func} is used to replace numerical optimization with a quasi-analytical approach for logit models on big data. It returns the coefficients, predicted values and quality criteria for the provided variables.
 #'
 #'
-#'@param frml an object of class \code{\link[stats]{formula}} (or one that can be coerced to that class): a symbolic description of the model to be fitted. The details of model specification are given under ‘Details’.
+#'@param frml an object of class \code{\link[stats]{formula}} (or one that can be coerced to that class): a symbolic description of the model to be fitted. The details of model specification are given under âDetailsâ.
 #'@param data a data frame containing the variables in the model (or object coercible by \code{\link[base]{as.data.frame}} to a data frame).  Details of the structure of the data are given under 'Details'.
-#'@param weights an optional vector of ‘prior weights’ to be used in the fitting process. Should be NULL or a numeric vector. In case of NULL, each case is weighted with 1.
+#'@param weights an optional vector of âprior weightsâ to be used in the fitting process. Should be NULL or a numeric vector. In case of NULL, each case is weighted with 1.
 #'@param seed saving the state of a random process. Should be NULL or a numeric vector. In case of NULL a seed is generated at random.
 #'
 #'@details A typical predictor has the form dependent_Variable '~' independent_Variables.\cr The dependent_Variable has \strong{two} categories.\cr If there is more than one independent_Variable, they can be combined with a '+'.
-#'@details The data frame can \strong{not} contain any missing values.\cr \strong{Metric} variables have to be of type \strong{numeric}. All \strong{other variables} have to be of type \strong{integer}.\cr The first variable in the dataset hat to be the dependent variable.\cr The scale of large numbers has to be reduced e.g. standardization.
+#'@details The data frame must \strong{not} contain any missing values.\cr \strong{Metric} variables have to be of type \strong{numeric}. All \strong{other variables} have to be of type \strong{integer}.\cr The first variable in the dataset hat to be the dependent variable.\cr The scale of large numbers has to be reduced e.g. standardization.
 #'
 #'
 #'@return An object of class \emph{QAS.func} is a list containing at least the following components:
@@ -32,7 +32,7 @@
 #'@references
 #'Lipovetsky, S. (2014), Analytical closed-form solution for binary logit regression by categorical predictors, \emph{Journal of Applied Statistics}, No. 42 / 2015 \cr
 #'Lipovetsky, S. & Conklin, M. (2014), Best-Worst Scaling in analytical closed-form solution, \emph{The Journal of Choice Modelling}, No. 10 / 2014 \cr
-#'Stoltenberg, B. (2016), Using logit on big data – from iterative methods to analytical solutions, \emph{GfK Verein Working Paper Series}, No. 3 / 2016 \cr
+#'Stoltenberg, B. (2016), Using logit on big data â from iterative methods to analytical solutions, \emph{GfK Verein Working Paper Series}, No. 3 / 2016 \cr
 #'
 #'@examples
 #' # generate Data
@@ -131,7 +131,7 @@ QAS.func <- function(frml, data = data, weights = NULL, seed = NULL) {
   # let's make 'Cell' in column going immediately after the data:
   model_data[,'Cell'] <- rep(0, nr)
 
-  # -------------------------------- Zeilen für contingency_function vorbereiten
+  # -------------------------------- Zeilen fÃ¼r contingency_function vorbereiten
 
   keeps <- names(X)
   model_data[,'Cell'] <- apply(as.matrix(model_data[keeps]), 1, function(x) paste(x, collapse = ' '))
@@ -205,7 +205,7 @@ QAS.func <- function(frml, data = data, weights = NULL, seed = NULL) {
 
 }
 
-#---------------------------- Wird nur intern verwendet, daher kein export
+#---------------------------- Wird nur intern verwendet, daher kein Export
 contingency_function <- function(Y, Cell) {
 
   Counts.of.Bought <- tapply(Y[,1], Cell, mean)
@@ -286,7 +286,7 @@ predictQAS <- function(QAS.res, data) {
 
     }
 
-    data[,numvar] <- catdata                                            # Datenzusammenfügen
+    data[,numvar] <- catdata                                            # DatenzusammenfÃ¼gen
   }
 
   # y_hat berechnen
@@ -304,7 +304,7 @@ predictQAS <- function(QAS.res, data) {
 
   yhat_orig <- as.vector((eV/(1+eV)))
   transformed_data <- data
-  row.names(transformed_data) <- 1:nrow(transformed_data)            # Nummerierung der Fälle
+  row.names(transformed_data) <- 1:nrow(transformed_data)            # Nummerierung der FÃ¤lle
 
   return(list(yhat_orig=yhat_orig,transformed_data=transformed_data))
 }

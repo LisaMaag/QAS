@@ -9,7 +9,7 @@
 #'@param seed saving the state of a random process. Should be NULL or a numeric vector. In case of NULL a seed is generated at random.
 #'
 #'@details A typical predictor has the form dependent_Variable '~' independent_Variables.\cr The dependent_Variable has \strong{two} categories.\cr If there is more than one independent_Variable, they can be combined with a '+'.
-#'@details The data frame can \strong{not} contain any missing values.\cr \strong{Metric} variables have to be of type \strong{numeric}. All \strong{other variables} have to be of type \strong{integer}.\cr The first variable in the dataset hat to be the dependent variable.\cr The scale of large numbers has to be reduced e.g. standardization.
+#'@details The data frame must \strong{not} contain any missing values.\cr \strong{Metric} variables have to be of type \strong{numeric}. All \strong{other variables} have to be of type \strong{integer}.\cr The first variable in the dataset hat to be the dependent variable.\cr The scale of large numbers has to be reduced e.g. standardization.
 #'
 #'
 #'@return An object of class \emph{QAS.func} is a list containing at least the following components:
@@ -147,7 +147,7 @@ QAS.func <- function(frml, data = data, weights = NULL, seed = NULL) {
   modelling.all <- model_data[keeps]
   rm(keeps)
 
-  # ------------------------------ Linear Regression
+  # ------------------------------ Lineare Regression
 
   #  ONE Steps to calculate:
   #  I.   calculate OLS.beta:
@@ -205,7 +205,7 @@ QAS.func <- function(frml, data = data, weights = NULL, seed = NULL) {
 
 }
 
-#---------------------------- Wird nur intern verwendet, daher kein export
+#---------------------------- Wird nur intern verwendet, daher kein Export
 contingency_function <- function(Y, Cell) {
 
   Counts.of.Bought <- tapply(Y[,1], Cell, mean)

@@ -291,7 +291,7 @@ predictQAS <- function(QAS.res, data) {
 
   # y_hat berechnen
 
-  Xnew1 <- c(attributes(QAS.res$terms)$term.labels)   # alle die auch als UV werwendet wurden
+  Xnew1 <- c(attributes(QAS.res$terms)$term.labels)   # alle die auch als UV verwendet wurden
   Xnew <- as.data.frame(data[,Xnew1])
   intercept <- rep(1,nrow(Xnew))
   Xnew <- cbind(intercept, Xnew)

@@ -5,7 +5,7 @@
 #'
 #'@param frml an object of class \code{\link[stats]{formula}} (or one that can be coerced to that class): a symbolic description of the model to be fitted. The details of model specification are given under âDetailsâ.
 #'@param data a data frame containing the variables in the model (or object coercible by \code{\link[base]{as.data.frame}} to a data frame).  Details of the structure of the data are given under 'Details'.
-#'@param weights an optional vector of prior weights to be used in the fitting process. Should be NULL or a numeric vector. In case of NULL, each case is weighted with 1.
+#'@param weights an optional vector of 'prior weights' to be used in the fitting process. Should be NULL or a numeric vector. In case of NULL, each case is weighted with 1.
 #'@param seed saving the state of a random process. Should be NULL or a numeric vector. In case of NULL a seed is generated at random.
 #'@param tau an optional parameter proposed by King and Zeng (2001) which comprises prior information about the fraction of ones in the population of the dependent variable. It has to lie between 0 and 1.
 #'
@@ -32,7 +32,7 @@
 #'King, G. & Zeng, L. (2001), Logistic Regression in Rare Events Data, \emph{Political Analysis}, No. 9 / 2001 \cr
 #'Lipovetsky, S. (2014), Analytical closed-form solution for binary logit regression by categorical predictors, \emph{Journal of Applied Statistics}, No. 42 / 2015 \cr
 #'Lipovetsky, S. & Conklin, M. (2014), Best-Worst Scaling in analytical closed-form solution, \emph{The Journal of Choice Modelling}, No. 10 / 2014 \cr
-#'Stoltenberg, B. (2016), Using logit on big data â from iterative methods to analytical solutions, \emph{GfK Verein Working Paper Series}, No. 3 / 2016 \cr
+#'Stoltenberg, B. (2016), Using logit on big data - from iterative methods to analytical solutions, \emph{GfK Verein Working Paper Series}, No. 3 / 2016 \cr
 #'
 #'@examples
 #' # generate Data

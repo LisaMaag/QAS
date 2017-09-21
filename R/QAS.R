@@ -3,7 +3,7 @@
 #'@description \code{QAS.func} is used to replace numerical optimization with a quasi-analytical approach for logit models on big data. It returns the coefficients, predicted values and quality criteria for the provided variables.
 #'
 #'
-#'@param frml an object of class \code{\link[stats]{formula}} (or one that can be coerced to that class): a symbolic description of the model to be fitted. The details of model specification are given under âDetailsâ.
+#'@param frml an object of class \code{\link[stats]{formula}} (or one that can be coerced to that class): a symbolic description of the model to be fitted. The details of model specification are given under 'Details'.
 #'@param data a data frame containing the variables in the model (or object coercible by \code{\link[base]{as.data.frame}} to a data frame).  Details of the structure of the data are given under 'Details'.
 #'@param weights an optional vector of 'prior weights' to be used in the fitting process. Should be NULL or a numeric vector. In case of NULL, each case is weighted with 1.
 #'@param seed saving the state of a random process. Should be NULL or a numeric vector. In case of NULL a seed is generated at random.

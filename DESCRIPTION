@@ -1,7 +1,7 @@
 Package: QAS
 Title: Quasi-analytical solution for logit
-Version: 0.1.2
-Author: Lisa Maag
+Version: 0.2
+Author: Lisa Maag, Fabian Woerz
 Maintainer: Lisa Maag <lisa.maag@gfk.com>
 Description: The package provides a quasi-analytical solution for logit models. 
     Numerical optimization for logit models is often time consuming, at least for big data. This package avoids this problem with a quasi-analytical approach. 
@@ -11,6 +11,9 @@ Description: The package provides a quasi-analytical solution for logit models.
 License: GPL-2
 Encoding: UTF-8
 LazyData: true
+Imports: mice
 RoxygenNote: 6.0.1
 URL: https://github.com/LisaMaag/QAS
 BugReports: https://github.com/LisaMaag/QAS/issues
+NeedsCompilation: no
+Packaged: 2017-09-22 12:51:20 UTC; FNWOER

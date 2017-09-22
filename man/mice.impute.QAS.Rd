@@ -4,7 +4,7 @@
 \alias{mice.impute.QAS}
 \title{Function to use QAS in Mice}
 \usage{
-mice.impute.QAS(y, ry, x)
+mice.impute.QAS(y, ry, x, boot = TRUE, ...)
 }
 \arguments{
 \item{y}{The target variable}
@@ -12,6 +12,10 @@ mice.impute.QAS(y, ry, x)
 \item{ry}{a logical vector, which indicates the missing values in the target variable}
 
 \item{x}{a data frame with the independent variables}
+
+\item{boot}{if TRUE, a bayesian bootstrap sample is applied}
+
+\item{...}{further objects from other functions}
 }
 \value{
 An object of class \emph{mice.impute.QAS} is a vector containing the imputed values of the target variable.
@@ -27,16 +31,20 @@ z <- as.integer(c(3,2,2,1,3,3,2,1,1,3))
 example_data <- data.frame(y,x,z)
 
 # deploy QAS.func-Function
-result1 <- QAS.func(y~x+z, data=example_data,weight=NULL,seed=NULL)
+result1 <- QAS.func(y~x+z, data=example_data, weights=NULL, seed=NULL, tau=NULL)
 
 # deploy predictQas-Function
 result2  <- predictQAS(QAS.res = result1, data=example_data)
 
 # generate logical vector and data frame with independent variables
-ry <- c(TRUE,TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,TRUE,TRUE)
+ry <- c(TRUE,TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,TRUE,TRUE,TRUE)
 x <- data.frame(x,z)
 
 # deploy mice.impute.QAS-Funktion
-impute <- mice.impute.QAS(y=y,ry=ry,x=example_data)
+impute <- mice.impute.QAS(y=y, ry=ry, x=example_data, boot=TRUE)
+
+# run mice function
+library(mice)
+final <- mice(nhanes2,method=c("","pmm","QAS","pmm"))
 
 }

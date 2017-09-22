@@ -4,19 +4,23 @@
 \alias{predictQAS}
 \title{Function for categorization after QAS.func}
 \usage{
-predictQAS(QAS.res, data)
+predictQAS(QAS.res, data, same = FALSE)
 }
 \arguments{
 \item{QAS.res}{The results of the QAS.func-Function}
 
 \item{data}{A data frame containing the variables in the model for QAS.func}
+
+\item{same}{a logical vector which indicates whether prediction of the dependent variable is applied for the same dataset used for QAS.func. Its default is FALSE.}
 }
 \value{
 An object of class \emph{predictQAS} is a list containing at least the following components:
 
 \describe{
- \item{\code{yhat_orig}}{the predicted values of the dependent variable based on the coefficients of QAS.func and the dataset used for categorization}
- \item{\code{data}}{the dataset with categorized numeric variables}
+ \item{\code{yhat}}{the predicted values of the dependent variable based on the coefficients of QAS.func and the dataset used for categorization}
+ \item{\code{transformed_data}}{the dataset with categorized numeric variables}
+ \item{\code{AIC}}{A version of Akaike's Information Criterion}
+ \item{\code{BIC}}{A version if Bayesian Information Criterion}
  }
 }
 \description{
@@ -30,10 +34,9 @@ z <- as.integer(c(3,2,2,1,3,3,2,1,1,3))
 example_data <- data.frame(y,x,z)
 
 # deploy QAS.func-Function
-result1 <- QAS.func(y~x+z, data=example_data,weight=NULL,seed=NULL)
+result1 <- QAS.func(y~x+z, data=example_data, weights=NULL, seed=NULL, tau = NULL)
 
 # deploy predictQas-Function
 result2  <- predictQAS(QAS.res = result1, data=example_data)
-
 
 }

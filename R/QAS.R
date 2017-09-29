@@ -48,7 +48,6 @@
 #'
 #'@export
 QAS.func <- function(frml, data = data, weights = NULL, seed = NULL, tau = NULL) {
-
   NAtest <-  unlist(lapply(data, anyNA))
 
   if (any(NAtest)){
@@ -128,6 +127,8 @@ QAS.func <- function(frml, data = data, weights = NULL, seed = NULL, tau = NULL)
   }
 
   numindex <- which(sapply(model_data, function(x)length(unique(x))) > 6)
+  
+  if (length(numindex) != 0) {
 
   numdat <- as.data.frame(model_data[,numindex])
 
@@ -142,6 +143,8 @@ QAS.func <- function(frml, data = data, weights = NULL, seed = NULL, tau = NULL)
 
   means <- do.call(cbind,lapply(catdat,function(x)x[[2]]))[-1,,drop=FALSE]
   rownames(means) <- c(1:nrow(means))
+  
+  }
 
   # -------------------------------- Cell definition
 
@@ -196,8 +199,10 @@ QAS.func <- function(frml, data = data, weights = NULL, seed = NULL, tau = NULL)
     rm(ymean)
   }
 
+  if (length(numindex) != 0) {
   results$means.for.cat <- means
   results$categorized.variables <- colnames(means)
+  }
   results$seed <- seed
   # apply original y to model output
   results$model <- cbind(data[1], results$model[-1])
